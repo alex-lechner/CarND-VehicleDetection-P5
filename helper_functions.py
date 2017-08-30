@@ -8,6 +8,8 @@ from skimage.feature import hog
 
 
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
+    box_list = []
+
     draw_img = np.copy(img)
     img = img.astype(np.float32) / 255
 
@@ -70,8 +72,10 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
                 win_draw = np.int(window * scale)
                 cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart),
                               (xbox_left + win_draw, ytop_draw + win_draw + ystart), (0, 0, 255), 6)
+                box_list.append(
+                    ((xbox_left, ytop_draw + ystart), (xbox_left + win_draw, ytop_draw + win_draw + ystart)))
 
-    return draw_img
+    return draw_img, box_list
 
 
 def convert_color(img, color_space='YCrCb'):
@@ -178,10 +182,10 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
     # Create a list to append feature vectors to
     features = []
     # Iterate through the list of images
-    for file in imgs:
+    for image in imgs:
         file_features = []
         # Read in each one by one
-        image = mpimg.imread(file)
+        # image = mpimg.imread(file)
         # apply color conversion if other than 'RGB'
         if color_space != 'RGB':
             feature_image = convert_color(image, color_space=color_space)
