@@ -96,4 +96,8 @@ ENV/
 /examples
 project_video.mp4
 writeup_template.md
+non-vehicles.zip
+/non-vehicles
+vehicles.zip
+/vehicles
 /.idea
