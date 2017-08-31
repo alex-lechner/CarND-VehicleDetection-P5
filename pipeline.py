@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from moviepy.video.io.VideoFileClip import VideoFileClip
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC
@@ -130,13 +131,19 @@ def video_pipeline(img, save=False):
     svc = params_pickle["svc"]
 
     if save:
-        draw_image = np.copy(img)
+        # Uncomment the following line if you extracted training
+        # data from .png images (scaled 0 to 1 by mpimg) and the
+        # image you are searching is a .jpg (scaled 0 to 255)
+        # Test images are always in .jpg!
+        jpeg_img = img.astype(np.float32) / 255
+
+        draw_image = np.copy(jpeg_img)
         # Min and max in y to search in slide_window()
-        # assuming that approx. 55% of the upper half and 7% from the bottom of the image are unnecessary
-        y_start_stop = [int(draw_image.shape[0] * 0.55), int(draw_image.shape[0] * 0.07)]
-        windows = slide_window(img, x_start_stop=[None, None], y_start_stop=y_start_stop,
+        # assuming that approx. 55% of the upper half of the image are unnecessary
+        y_start_stop = [int(draw_image.shape[0] * 0.55), None]
+        windows = slide_window(jpeg_img, x_start_stop=[None, None], y_start_stop=y_start_stop,
                                xy_window=(96, 96), xy_overlap=(0.5, 0.5))
-        hot_windows = search_windows(img, windows, svc, X_scaler, color_space=color_space,
+        hot_windows = search_windows(jpeg_img, windows, svc, X_scaler, color_space=color_space,
                                      spatial_size=spatial_size, hist_bins=hist_bins,
                                      orient=orient, pix_per_cell=pix_per_cell,
                                      cell_per_block=cell_per_block,
@@ -190,19 +197,15 @@ save_random_images(cars, filename="car_samples.jpg")
 save_random_images(not_cars, filename="not_car_hog_features.jpg", amount=4, hog_features=True)
 save_random_images(cars, filename="car_hog_features.jpg", amount=4, hog_features=True)
 
-# training()
+# train the classifier
+training()
 
+# take a test image and test the pipline
 img = mpimg.imread('test_images/test1.jpg')
+video_pipeline(img, save=True)
 
-# Uncomment the following line if you extracted training
-# data from .png images (scaled 0 to 1 by mpimg) and the
-# image you are searching is a .jpg (scaled 0 to 255)
-image = img.astype(np.float32) / 255
-
-# test the pipline
-video_pipeline(image, save=True)
-
-# video_output_file = 'project_video_output.mp4'
-# video_input_file = VideoFileClip("./project_video.mp4")
-# video_output = video_input_file.fl_image(video_pipeline)
-# video_output.write_videofile(video_output_file, audio=False)
+# try the pipline on a videotream
+video_output_file = 'project_video_output.mp4'
+video_input_file = VideoFileClip("./project_video.mp4")
+video_output = video_input_file.fl_image(video_pipeline)
+video_output.write_videofile(video_output_file, audio=False)
